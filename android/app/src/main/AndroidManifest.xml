@@ -1,8 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.themealdb_consumer">
+    package="com.acdwisu.themealdb_api_consumer">
+    <uses-permission android:name="android.permission.INTERNET"/>
    <application
-        android:label="themealdb_consumer"
+        android:label="Themealdb API Consumer"
         android:name="${applicationName}"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="false"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
