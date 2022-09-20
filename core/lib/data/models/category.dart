@@ -1,8 +1,7 @@
 import 'package:core/data/models/model.dart';
-import 'package:core/domain/entities/area.dart';
 import '../../domain/entities/category.dart';
 
-class CategoryModel extends Model<Category> {
+class CategoryModel implements Model<Category> {
   final String name;
 
   CategoryModel({required this.name});

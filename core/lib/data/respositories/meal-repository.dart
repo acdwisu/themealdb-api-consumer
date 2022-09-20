@@ -6,7 +6,9 @@ import 'package:core/common/failure.dart';
 import 'package:core/common/network-info.dart';
 import 'package:core/data/datasources/meal/local-datasource.dart';
 import 'package:core/data/datasources/meal/remote-datasource.dart';
-import 'package:core/domain/entities/category.dart';
+import 'package:core/data/models/meal.dart';
+import 'package:core/domain/entities/category-detail.dart';
+import 'package:core/domain/entities/meal-detail.dart';
 import 'package:core/domain/entities/meal.dart';
 import 'package:core/domain/repositories/meal-repository.dart';
 import 'package:dartz/dartz.dart';
@@ -23,7 +25,7 @@ class MealRepositoryImpl extends MealRepository {
   });
 
   @override
-  Stream<Either<Failure, Iterable<Category>>> getCategories() async* {
+  Stream<Either<Failure, Iterable<CategoryDetail>>> getCategories() async* {
     bool hasLocalData = false;
 
     try {
@@ -94,17 +96,20 @@ class MealRepositoryImpl extends MealRepository {
   }
 
   @override
-  Stream<Either<Failure, Iterable<Meal>>> getMealPerCategory(Category category) async* {
+  Stream<Either<Failure, Iterable<Meal>>> getMealPerCategory(CategoryDetail category) async* {
     bool hasLocalData = false;
+    late final Iterable<MealModel> cached;
 
     try {
-      final cached = await localDatasource.getMealsByCategoryCache(category);
+      cached = await localDatasource.getMealsByCategoryCache(category);
 
       yield Right(cached.map((e) => e.toEntity));
 
       hasLocalData = true;
     } catch (e, trace) {
       log('no local data', error: e, stackTrace: trace);
+
+      cached = const Iterable.empty();
     }
     
     if(!await networkInfo.isConnected) {
@@ -114,9 +119,18 @@ class MealRepositoryImpl extends MealRepository {
     }
 
     try {
+      final mapped = cached.toList().asMap()
+          .map((key, value) => MapEntry(value.id, value));
+
+      await Future.delayed(Duration(seconds: 5));
+
       final meals = (await remoteDatasource.getMealsByCategory(
         category
-      )).map((e) => e.toEntity);
+      )).map((e) {
+        e.favorite = mapped[e.id]?.favorite ?? false;
+
+        return e.toEntity;
+      });
 
       final temp = await Future.wait([
         localDatasource.saveMeals(meals)
@@ -153,9 +167,9 @@ class MealRepositoryImpl extends MealRepository {
   }
 
   @override
-  Future<Either<Failure, String>> newFavorite(Meal meal) async {
+  Future<Either<Failure, String>> newFavorite(String idMeal) async {
     try {
-      final result = await localDatasource.newFavorite(meal);
+      final result = await localDatasource.newFavorite(idMeal);
 
       if(result != 0) {
         return const Right('oke');
@@ -196,14 +210,88 @@ class MealRepositoryImpl extends MealRepository {
       if(!await networkInfo.isConnected) {
         throw Exception('Disconnected from network');
       }
-      
+
+      final favorites = (await localDatasource.getFavoritesId()).toList()
+          .asMap().map((key, value) => MapEntry(value, value));
+
       final result = await remoteDatasource.searchMealsByQuery(query);
 
-      return Right(result.map((e) => e.toEntity));
+      return Right(result.map((e) {
+        e.favorite = favorites[e.id]!=null;
+
+        return e.toEntity;
+      }));
     } catch(e, trace) {
       log('error', error: e, stackTrace: trace);
 
       return Left(CommonFailure(e.toString()));
+    }
+  }
+
+  @override
+  Stream<Either<Failure, MealDetail>> detailMeal(String idMeal) async* {
+    bool hasLocalData = false;
+
+    try {
+      final cached = await localDatasource.getDetailMeal(idMeal);
+
+      if(cached==null) {
+        throw Exception('no local data');
+      }
+
+      yield Right(cached.toEntity);
+
+      hasLocalData = true;
+    } catch (e, trace) {
+      log('no local data', error: e, stackTrace: trace);
+    }
+
+    if(!await networkInfo.isConnected) {
+      if(!hasLocalData) {
+        yield Left(ConnectionFailure());
+      }
+    }
+
+    try {
+      final meal = (await remoteDatasource.getDetailMeal(
+        idMeal
+      ))?.toEntity;
+
+      if(meal == null) {
+        throw Exception('no remote data');
+      }
+
+      final temp = await Future.wait([
+        localDatasource.saveMeal(meal)
+      ]);
+
+      yield Right(meal);
+    } on ServerException catch (e, trace) {
+      log('ServerException ${e.message}', error: e, stackTrace: trace);
+
+      if(!hasLocalData) {
+        yield Left(ServerFailure(
+          message: e.message ?? e.toString(),
+        ));
+      }
+    } on TlsException catch (e, trace) {
+      log('TlsException', error: e, stackTrace: trace);
+
+      if(!hasLocalData) {
+        yield Left(CommonFailure('Certificate Not Valid:\n${e.message}'));
+      }
+    } on DatabaseException catch (e, trace) {
+      log('databaseexception ${e.message}', error: e, stackTrace: trace);
+
+      if(!hasLocalData) {
+        yield Left(DatabaseFailure(message: e.message));
+      }
+    } catch (e, trace) {
+      log('error', error: e, stackTrace: trace);
+
+      if(!hasLocalData) {
+        yield Left(CommonFailure(e.toString()));
+      }
     }
   }
 

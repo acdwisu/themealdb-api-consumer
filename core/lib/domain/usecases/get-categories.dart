@@ -1,4 +1,4 @@
-import 'package:core/domain/entities/category.dart';
+import 'package:core/domain/entities/category-detail.dart';
 import 'package:core/domain/repositories/meal-repository.dart';
 import 'package:dartz/dartz.dart';
 
@@ -9,7 +9,7 @@ class GetCategories {
 
   GetCategories(this.mealRepository);
 
-  Stream<Either<Failure, Iterable<Category>>> execute() {
+  Stream<Either<Failure, Iterable<CategoryDetail>>> execute() {
     return mealRepository.getCategories();
   }
 }

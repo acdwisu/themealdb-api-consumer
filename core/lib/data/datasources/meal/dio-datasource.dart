@@ -1,24 +1,29 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:core/common/instance.dart';
 import 'package:core/data/datasources/meal/remote-datasource.dart';
-import 'package:core/data/models/category.dart';
+import 'package:core/data/models/category-detail.dart';
+import 'package:core/data/models/meal-detail.dart';
 import 'package:core/data/models/meal.dart';
-import 'package:core/domain/entities/category.dart';
+import 'package:core/domain/entities/category-detail.dart';
+import 'package:dio/dio.dart';
 
 class MealDioDatasource extends MealRemoteDatasource {
+  final Dio dio;
+
+  MealDioDatasource(this.dio);
+
   @override
-  Future<Iterable<CategoryModel>> getCategories() async {
+  Future<Iterable<CategoryDetailModel>> getCategories() async {
     try {
-      final response = await dio.get('/list.php?c=list');
+      final response = await dio.get('/categories.php');
       
       if(response.statusCode != 200) {
         return List.empty();
       }
       
-      return (jsonDecode(response.data)['meals'] as List)
-          .map((e) => CategoryModel.fromJsonRemote(e));
+      return (response.data['categories'] as List)
+          .map((e) => CategoryDetailModel.fromJsonRemote(e));
     } catch(e, trace) {
       log('error', error: e, stackTrace: trace);
       
@@ -27,7 +32,7 @@ class MealDioDatasource extends MealRemoteDatasource {
   }
 
   @override
-  Future<Iterable<MealModel>> getMealsByCategory(Category category) async {
+  Future<Iterable<MealModel>> getMealsByCategory(CategoryDetail category) async {
     try {
       final response = await dio.get('/filter.php?c=${category.name}');
 
@@ -35,8 +40,8 @@ class MealDioDatasource extends MealRemoteDatasource {
         return List.empty();
       }
 
-      return (jsonDecode(response.data)['meals'] as List)
-          .map((e) => MealModel.fromJsonRemote(e));
+      return (response.data['meals'] as List)
+          .map((e) => MealModel.fromJsonRemote(e, category.name));
     } catch(e, trace) {
       log('error', error: e, stackTrace: trace);
 
@@ -45,7 +50,7 @@ class MealDioDatasource extends MealRemoteDatasource {
   }
 
   @override
-  Future<Iterable<MealModel>> searchMealsByQuery(String query) async {
+  Future<Iterable<MealDetailModel>> searchMealsByQuery(String query) async {
     try {
       final response = await dio.get('/search.php?s=$query');
 
@@ -53,12 +58,29 @@ class MealDioDatasource extends MealRemoteDatasource {
         return List.empty();
       }
 
-      return (jsonDecode(response.data)['meals'] as List)
-          .map((e) => MealModel.fromJsonRemote(e));
+      return (response.data['meals'] as List)
+          .map((e) => MealDetailModel.fromJsonRemote(e));
     } catch(e, trace) {
       log('error', error: e, stackTrace: trace);
 
       return List.empty();
+    }
+  }
+
+  @override
+  Future<MealDetailModel?> getDetailMeal(String idMeal) async {
+    try {
+      final response = await dio.get('/lookup.php?i=$idMeal');
+
+      if(response.statusCode != 200) {
+        return throw Exception('response invalid');
+      }
+
+      return MealDetailModel.fromJsonRemote(response.data['meals'][0]);
+    } catch(e, trace) {
+      log('error', error: e, stackTrace: trace);
+
+      return null;
     }
   }
 

@@ -13,7 +13,7 @@ class MealTableData extends DataClass implements Insertable<MealTableData> {
   final String name;
   final String? drinkAlternate;
   final String categoryName;
-  final String areaName;
+  final String? areaName;
   final String? instructions;
   final String thumbnail;
   final String? tags;
@@ -26,7 +26,7 @@ class MealTableData extends DataClass implements Insertable<MealTableData> {
       required this.name,
       this.drinkAlternate,
       required this.categoryName,
-      required this.areaName,
+      this.areaName,
       this.instructions,
       required this.thumbnail,
       this.tags,
@@ -49,7 +49,7 @@ class MealTableData extends DataClass implements Insertable<MealTableData> {
       categoryName: const StringType()
           .mapFromDatabaseResponse(data['${effectivePrefix}category_name'])!,
       areaName: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}area_name'])!,
+          .mapFromDatabaseResponse(data['${effectivePrefix}area_name']),
       instructions: const StringType()
           .mapFromDatabaseResponse(data['${effectivePrefix}instructions']),
       thumbnail: const StringType()
@@ -74,7 +74,9 @@ class MealTableData extends DataClass implements Insertable<MealTableData> {
       map['drink_alternate'] = Variable<String?>(drinkAlternate);
     }
     map['category_name'] = Variable<String>(categoryName);
-    map['area_name'] = Variable<String>(areaName);
+    if (!nullToAbsent || areaName != null) {
+      map['area_name'] = Variable<String?>(areaName);
+    }
     if (!nullToAbsent || instructions != null) {
       map['instructions'] = Variable<String?>(instructions);
     }
@@ -103,7 +105,9 @@ class MealTableData extends DataClass implements Insertable<MealTableData> {
           ? const Value.absent()
           : Value(drinkAlternate),
       categoryName: Value(categoryName),
-      areaName: Value(areaName),
+      areaName: areaName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(areaName),
       instructions: instructions == null && nullToAbsent
           ? const Value.absent()
           : Value(instructions),
@@ -129,7 +133,7 @@ class MealTableData extends DataClass implements Insertable<MealTableData> {
       name: serializer.fromJson<String>(json['name']),
       drinkAlternate: serializer.fromJson<String?>(json['drinkAlternate']),
       categoryName: serializer.fromJson<String>(json['categoryName']),
-      areaName: serializer.fromJson<String>(json['areaName']),
+      areaName: serializer.fromJson<String?>(json['areaName']),
       instructions: serializer.fromJson<String?>(json['instructions']),
       thumbnail: serializer.fromJson<String>(json['thumbnail']),
       tags: serializer.fromJson<String?>(json['tags']),
@@ -147,7 +151,7 @@ class MealTableData extends DataClass implements Insertable<MealTableData> {
       'name': serializer.toJson<String>(name),
       'drinkAlternate': serializer.toJson<String?>(drinkAlternate),
       'categoryName': serializer.toJson<String>(categoryName),
-      'areaName': serializer.toJson<String>(areaName),
+      'areaName': serializer.toJson<String?>(areaName),
       'instructions': serializer.toJson<String?>(instructions),
       'thumbnail': serializer.toJson<String>(thumbnail),
       'tags': serializer.toJson<String?>(tags),
@@ -241,7 +245,7 @@ class MealTableCompanion extends UpdateCompanion<MealTableData> {
   final Value<String> name;
   final Value<String?> drinkAlternate;
   final Value<String> categoryName;
-  final Value<String> areaName;
+  final Value<String?> areaName;
   final Value<String?> instructions;
   final Value<String> thumbnail;
   final Value<String?> tags;
@@ -268,7 +272,7 @@ class MealTableCompanion extends UpdateCompanion<MealTableData> {
     required String name,
     this.drinkAlternate = const Value.absent(),
     required String categoryName,
-    required String areaName,
+    this.areaName = const Value.absent(),
     this.instructions = const Value.absent(),
     required String thumbnail,
     this.tags = const Value.absent(),
@@ -278,7 +282,6 @@ class MealTableCompanion extends UpdateCompanion<MealTableData> {
   })  : idMeal = Value(idMeal),
         name = Value(name),
         categoryName = Value(categoryName),
-        areaName = Value(areaName),
         thumbnail = Value(thumbnail);
   static Insertable<MealTableData> custom({
     Expression<int>? id,
@@ -286,7 +289,7 @@ class MealTableCompanion extends UpdateCompanion<MealTableData> {
     Expression<String>? name,
     Expression<String?>? drinkAlternate,
     Expression<String>? categoryName,
-    Expression<String>? areaName,
+    Expression<String?>? areaName,
     Expression<String?>? instructions,
     Expression<String>? thumbnail,
     Expression<String?>? tags,
@@ -316,7 +319,7 @@ class MealTableCompanion extends UpdateCompanion<MealTableData> {
       Value<String>? name,
       Value<String?>? drinkAlternate,
       Value<String>? categoryName,
-      Value<String>? areaName,
+      Value<String?>? areaName,
       Value<String?>? instructions,
       Value<String>? thumbnail,
       Value<String?>? tags,
@@ -358,7 +361,7 @@ class MealTableCompanion extends UpdateCompanion<MealTableData> {
       map['category_name'] = Variable<String>(categoryName.value);
     }
     if (areaName.present) {
-      map['area_name'] = Variable<String>(areaName.value);
+      map['area_name'] = Variable<String?>(areaName.value);
     }
     if (instructions.present) {
       map['instructions'] = Variable<String?>(instructions.value);
@@ -441,8 +444,8 @@ class $MealTableTable extends MealTable
   final VerificationMeta _areaNameMeta = const VerificationMeta('areaName');
   @override
   late final GeneratedColumn<String?> areaName = GeneratedColumn<String?>(
-      'area_name', aliasedName, false,
-      type: const StringType(), requiredDuringInsert: true);
+      'area_name', aliasedName, true,
+      type: const StringType(), requiredDuringInsert: false);
   final VerificationMeta _instructionsMeta =
       const VerificationMeta('instructions');
   @override
@@ -531,8 +534,6 @@ class $MealTableTable extends MealTable
     if (data.containsKey('area_name')) {
       context.handle(_areaNameMeta,
           areaName.isAcceptableOrUnknown(data['area_name']!, _areaNameMeta));
-    } else if (isInserting) {
-      context.missing(_areaNameMeta);
     }
     if (data.containsKey('instructions')) {
       context.handle(
@@ -584,8 +585,16 @@ class $MealTableTable extends MealTable
 class CategoryTableData extends DataClass
     implements Insertable<CategoryTableData> {
   final int id;
+  final String idCategory;
   final String name;
-  CategoryTableData({required this.id, required this.name});
+  final String thumbnail;
+  final String description;
+  CategoryTableData(
+      {required this.id,
+      required this.idCategory,
+      required this.name,
+      required this.thumbnail,
+      required this.description});
   factory CategoryTableData.fromData(
       Map<String, dynamic> data, GeneratedDatabase db,
       {String? prefix}) {
@@ -593,22 +602,34 @@ class CategoryTableData extends DataClass
     return CategoryTableData(
       id: const IntType()
           .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
+      idCategory: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}id_category'])!,
       name: const StringType()
           .mapFromDatabaseResponse(data['${effectivePrefix}name'])!,
+      thumbnail: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}thumbnail'])!,
+      description: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}description'])!,
     );
   }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['id_category'] = Variable<String>(idCategory);
     map['name'] = Variable<String>(name);
+    map['thumbnail'] = Variable<String>(thumbnail);
+    map['description'] = Variable<String>(description);
     return map;
   }
 
   CategoryTableCompanion toCompanion(bool nullToAbsent) {
     return CategoryTableCompanion(
       id: Value(id),
+      idCategory: Value(idCategory),
       name: Value(name),
+      thumbnail: Value(thumbnail),
+      description: Value(description),
     );
   }
 
@@ -617,7 +638,10 @@ class CategoryTableData extends DataClass
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return CategoryTableData(
       id: serializer.fromJson<int>(json['id']),
+      idCategory: serializer.fromJson<String>(json['idCategory']),
       name: serializer.fromJson<String>(json['name']),
+      thumbnail: serializer.fromJson<String>(json['thumbnail']),
+      description: serializer.fromJson<String>(json['description']),
     );
   }
   @override
@@ -625,58 +649,102 @@ class CategoryTableData extends DataClass
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'idCategory': serializer.toJson<String>(idCategory),
       'name': serializer.toJson<String>(name),
+      'thumbnail': serializer.toJson<String>(thumbnail),
+      'description': serializer.toJson<String>(description),
     };
   }
 
-  CategoryTableData copyWith({int? id, String? name}) => CategoryTableData(
+  CategoryTableData copyWith(
+          {int? id,
+          String? idCategory,
+          String? name,
+          String? thumbnail,
+          String? description}) =>
+      CategoryTableData(
         id: id ?? this.id,
+        idCategory: idCategory ?? this.idCategory,
         name: name ?? this.name,
+        thumbnail: thumbnail ?? this.thumbnail,
+        description: description ?? this.description,
       );
   @override
   String toString() {
     return (StringBuffer('CategoryTableData(')
           ..write('id: $id, ')
-          ..write('name: $name')
+          ..write('idCategory: $idCategory, ')
+          ..write('name: $name, ')
+          ..write('thumbnail: $thumbnail, ')
+          ..write('description: $description')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name);
+  int get hashCode => Object.hash(id, idCategory, name, thumbnail, description);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CategoryTableData &&
           other.id == this.id &&
-          other.name == this.name);
+          other.idCategory == this.idCategory &&
+          other.name == this.name &&
+          other.thumbnail == this.thumbnail &&
+          other.description == this.description);
 }
 
 class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
   final Value<int> id;
+  final Value<String> idCategory;
   final Value<String> name;
+  final Value<String> thumbnail;
+  final Value<String> description;
   const CategoryTableCompanion({
     this.id = const Value.absent(),
+    this.idCategory = const Value.absent(),
     this.name = const Value.absent(),
+    this.thumbnail = const Value.absent(),
+    this.description = const Value.absent(),
   });
   CategoryTableCompanion.insert({
     this.id = const Value.absent(),
+    required String idCategory,
     required String name,
-  }) : name = Value(name);
+    required String thumbnail,
+    required String description,
+  })  : idCategory = Value(idCategory),
+        name = Value(name),
+        thumbnail = Value(thumbnail),
+        description = Value(description);
   static Insertable<CategoryTableData> custom({
     Expression<int>? id,
+    Expression<String>? idCategory,
     Expression<String>? name,
+    Expression<String>? thumbnail,
+    Expression<String>? description,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (idCategory != null) 'id_category': idCategory,
       if (name != null) 'name': name,
+      if (thumbnail != null) 'thumbnail': thumbnail,
+      if (description != null) 'description': description,
     });
   }
 
-  CategoryTableCompanion copyWith({Value<int>? id, Value<String>? name}) {
+  CategoryTableCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? idCategory,
+      Value<String>? name,
+      Value<String>? thumbnail,
+      Value<String>? description}) {
     return CategoryTableCompanion(
       id: id ?? this.id,
+      idCategory: idCategory ?? this.idCategory,
       name: name ?? this.name,
+      thumbnail: thumbnail ?? this.thumbnail,
+      description: description ?? this.description,
     );
   }
 
@@ -686,8 +754,17 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
+    if (idCategory.present) {
+      map['id_category'] = Variable<String>(idCategory.value);
+    }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (thumbnail.present) {
+      map['thumbnail'] = Variable<String>(thumbnail.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
     }
     return map;
   }
@@ -696,7 +773,10 @@ class CategoryTableCompanion extends UpdateCompanion<CategoryTableData> {
   String toString() {
     return (StringBuffer('CategoryTableCompanion(')
           ..write('id: $id, ')
-          ..write('name: $name')
+          ..write('idCategory: $idCategory, ')
+          ..write('name: $name, ')
+          ..write('thumbnail: $thumbnail, ')
+          ..write('description: $description')
           ..write(')'))
         .toString();
   }
@@ -715,6 +795,13 @@ class $CategoryTableTable extends CategoryTable
       type: const IntType(),
       requiredDuringInsert: false,
       defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
+  final VerificationMeta _idCategoryMeta = const VerificationMeta('idCategory');
+  @override
+  late final GeneratedColumn<String?> idCategory = GeneratedColumn<String?>(
+      'id_category', aliasedName, false,
+      type: const StringType(),
+      requiredDuringInsert: true,
+      defaultConstraints: 'UNIQUE');
   final VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
@@ -722,8 +809,20 @@ class $CategoryTableTable extends CategoryTable
       type: const StringType(),
       requiredDuringInsert: true,
       defaultConstraints: 'UNIQUE');
+  final VerificationMeta _thumbnailMeta = const VerificationMeta('thumbnail');
   @override
-  List<GeneratedColumn> get $columns => [id, name];
+  late final GeneratedColumn<String?> thumbnail = GeneratedColumn<String?>(
+      'thumbnail', aliasedName, false,
+      type: const StringType(), requiredDuringInsert: true);
+  final VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String?> description = GeneratedColumn<String?>(
+      'description', aliasedName, false,
+      type: const StringType(), requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, idCategory, name, thumbnail, description];
   @override
   String get aliasedName => _alias ?? 'category_table';
   @override
@@ -736,11 +835,33 @@ class $CategoryTableTable extends CategoryTable
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
+    if (data.containsKey('id_category')) {
+      context.handle(
+          _idCategoryMeta,
+          idCategory.isAcceptableOrUnknown(
+              data['id_category']!, _idCategoryMeta));
+    } else if (isInserting) {
+      context.missing(_idCategoryMeta);
+    }
     if (data.containsKey('name')) {
       context.handle(
           _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('thumbnail')) {
+      context.handle(_thumbnailMeta,
+          thumbnail.isAcceptableOrUnknown(data['thumbnail']!, _thumbnailMeta));
+    } else if (isInserting) {
+      context.missing(_thumbnailMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
     }
     return context;
   }
@@ -899,7 +1020,7 @@ class $FavoriteTableTable extends FavoriteTable
       'id_meal', aliasedName, false,
       type: const StringType(),
       requiredDuringInsert: true,
-      defaultConstraints: 'REFERENCES meal_table (id_meal)');
+      defaultConstraints: 'UNIQUE REFERENCES meal_table (id_meal)');
   @override
   List<GeneratedColumn> get $columns => [id, idMeal];
   @override

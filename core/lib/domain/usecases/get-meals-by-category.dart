@@ -1,5 +1,5 @@
 import 'package:core/common/failure.dart';
-import 'package:core/domain/entities/category.dart';
+import 'package:core/domain/entities/category-detail.dart';
 import 'package:core/domain/repositories/meal-repository.dart';
 import 'package:dartz/dartz.dart';
 
@@ -10,7 +10,7 @@ class GetMealsByCategory {
 
   GetMealsByCategory({required this.mealRepository});
 
-  Stream<Either<Failure, Iterable<Meal>>> execute(Category category) {
+  Stream<Either<Failure, Iterable<Meal>>> execute(CategoryDetail category) {
     return mealRepository.getMealPerCategory(category);
   }
 }
