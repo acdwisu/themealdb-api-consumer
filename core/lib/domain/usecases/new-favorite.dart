@@ -9,7 +9,7 @@ class NewFavorites {
 
   NewFavorites(this.mealRepository);
 
-  Future<Either<Failure, String>> execute(Meal meal) {
-    return mealRepository.newFavorite(meal);
+  Future<Either<Failure, String>> execute(String idMeal) {
+    return mealRepository.newFavorite(idMeal);
   }
 }

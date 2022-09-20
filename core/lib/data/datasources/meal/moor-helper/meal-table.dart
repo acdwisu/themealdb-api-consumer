@@ -6,7 +6,7 @@ class MealTable extends Table {
   TextColumn get name => text()();
   TextColumn get drinkAlternate => text().nullable()();
   TextColumn get categoryName => text()();
-  TextColumn get areaName => text()();
+  TextColumn get areaName => text().nullable()();
   TextColumn get instructions => text().nullable()();
   TextColumn get thumbnail => text()();
   TextColumn get tags => text().nullable()();
