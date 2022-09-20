@@ -23,9 +23,7 @@ class _MealsByCategoryState extends State<MealsByCategory> {
   void initState() {
     super.initState();
 
-    context.read<MealExploreBloc>().add(
-      MealExploreRequestMealsByCategoryEvent(widget.category)
-    );
+    _fetchData();
   }
 
   @override
@@ -96,12 +94,19 @@ class _MealsByCategoryState extends State<MealsByCategory> {
 
                   return MealList(
                     meals: state.meals,
+                    onAfterDetail: _fetchData,
                   );
               }
             },
           )
         ],
       ),
+    );
+  }
+
+  void _fetchData() {
+    context.read<MealExploreBloc>().add(
+      MealExploreRequestMealsByCategoryEvent(widget.category)
     );
   }
 }

@@ -17,9 +17,7 @@ class _MealsFavoritedPageState extends State<MealsFavoritedPage> {
   void initState() {
     super.initState();
 
-    context.read<MealExploreBloc>().add(
-      MealExploreRequestMealsByFavorited()
-    );
+    _fetchData();
   }
 
   @override
@@ -39,11 +37,11 @@ class _MealsFavoritedPageState extends State<MealsFavoritedPage> {
           ),
           BlocBuilder<MealExploreBloc, MealExploreState>(
             buildWhen: (a,b) =>
-              a.stateMeals!=b.stateMeals ||
-                  a.meals!=b.meals ||
+              a.stateFavoriteMeals!=b.stateFavoriteMeals ||
+                  a.favoriteMeals!=b.favoriteMeals ||
                   a.stateUpdateFavorite!=b.stateUpdateFavorite,
             builder: (context, state) {
-              switch(state.stateMeals) {
+              switch(state.stateFavoriteMeals) {
                 case RequestState.Loading:
                   return const SizedBox(
                     height: 300,
@@ -70,7 +68,7 @@ class _MealsFavoritedPageState extends State<MealsFavoritedPage> {
                     ),
                   );
                 case RequestState.Loaded:
-                  if(state.meals.isEmpty) {
+                  if(state.favoriteMeals.isEmpty) {
                     return const SizedBox(
                       height: 300,
                       child: Center(
@@ -82,13 +80,20 @@ class _MealsFavoritedPageState extends State<MealsFavoritedPage> {
                   }
 
                   return MealList(
-                    meals: state.meals,
+                    meals: state.favoriteMeals,
+                    onAfterDetail: _fetchData,
                   );
               }
             },
           )
         ],
       ),
+    );
+  }
+
+  void _fetchData() {
+    context.read<MealExploreBloc>().add(
+        MealExploreRequestMealsByFavorited()
     );
   }
 }

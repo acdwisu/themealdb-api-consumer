@@ -122,6 +122,8 @@ class MealRepositoryImpl extends MealRepository {
       final mapped = cached.toList().asMap()
           .map((key, value) => MapEntry(value.id, value));
 
+      await Future.delayed(Duration(seconds: 5));
+
       final meals = (await remoteDatasource.getMealsByCategory(
         category
       )).map((e) {

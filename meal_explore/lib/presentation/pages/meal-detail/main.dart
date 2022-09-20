@@ -39,24 +39,24 @@ class _MealDetailPageState extends State<MealDetailPage> {
         title: Text(
           widget.meal.name,
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _favorite? Icons.favorite : Icons.favorite_border
-            ),
-            color: _favorite? Colors.red : null,
-            onPressed: () {
-              context.read<MealExploreBloc>().add(
-                _favorite? MealExploreRemoveFavoriteEvent(widget.meal.id) :
-                    MealExploreMakeFavoriteEvent(widget.meal.id)
-              );
-
-              setState(() {
-                _favorite = !_favorite;
-              });
-            },
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(
+        //       _favorite? Icons.favorite : Icons.favorite_border
+        //     ),
+        //     color: _favorite? Colors.red : null,
+        //     onPressed: () {
+        //       context.read<MealExploreBloc>().add(
+        //         _favorite? MealExploreRemoveFavoriteEvent(widget.meal.id) :
+        //             MealExploreMakeFavoriteEvent(widget.meal.id)
+        //       );
+        //
+        //       setState(() {
+        //         _favorite = !_favorite;
+        //       });
+        //     },
+        //   ),
+        // ],
       ),
       body: BlocBuilder<MealExploreBloc, MealExploreState>(
         buildWhen: (a,b) => a.stateMealDetail!=b.stateMealDetail

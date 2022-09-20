@@ -145,7 +145,7 @@ class MealDatabase extends _$MealDatabase {
        name: e.name,
        drinkAlternate: e.drinkAlternate,
        category: CategoryModel(name: e.categoryName),
-       area: AreaModel(name: e.areaName!),
+       area: AreaModel(name: e.areaName ?? ''),
        instructions: e.instructions,
        thumbnail: e.thumbnail,
        tags: e.tags,

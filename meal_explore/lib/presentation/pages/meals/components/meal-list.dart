@@ -4,10 +4,12 @@ import 'package:meal_explore/presentation/pages/meals/components/meal-tile.dart'
 
 class MealList extends StatelessWidget {
   final Iterable<Meal> meals;
+  final VoidCallback? onAfterDetail;
 
   const MealList({
     Key? key,
     required this.meals,
+    this.onAfterDetail,
   }) : super(key: key);
 
   @override
@@ -27,7 +29,10 @@ class MealList extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: meals.length,
       itemBuilder: (context, index) {
-        return MealTile(meal: meals.elementAt(index));
+        return MealTile(
+          meal: meals.elementAt(index),
+          onAfterDetail: onAfterDetail,
+        );
       },
     );
   }

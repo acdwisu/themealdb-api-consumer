@@ -101,7 +101,7 @@ class MealExploreBloc extends Bloc<MealExploreEvent, MealExploreState> {
         )),
         (r) => emit(state.copyWith(
           stateMeals: RequestState.Loaded,
-          meals: r,
+          meals: r.toList(),
         ))
       );
     }, onDone: () {
@@ -128,7 +128,7 @@ class MealExploreBloc extends Bloc<MealExploreEvent, MealExploreState> {
       )),
       (r) => emit(state.copyWith(
         stateMeals: RequestState.Loaded,
-        meals: r,
+        meals: r.toList(),
       ))
     );
   }
@@ -136,8 +136,8 @@ class MealExploreBloc extends Bloc<MealExploreEvent, MealExploreState> {
   FutureOr<void> _onReqMealByFavorite(MealExploreRequestMealsByFavorited event, Emitter<MealExploreState> emit) async {
     emit(
       state.copyWith(
-        stateMeals: RequestState.Loading,
-        meals: List.empty()
+        stateFavoriteMeals: RequestState.Loading,
+        favoriteMeals: List.empty()
       )
     );
 
@@ -145,12 +145,12 @@ class MealExploreBloc extends Bloc<MealExploreEvent, MealExploreState> {
 
     result.fold(
       (l) => emit(state.copyWith(
-        stateMeals: RequestState.Error,
+        stateFavoriteMeals: RequestState.Error,
         message: l.message,
       )),
       (r) => emit(state.copyWith(
-        stateMeals: RequestState.Loaded,
-        meals: r,
+        stateFavoriteMeals: RequestState.Loaded,
+        favoriteMeals: r.toList(),
       ))
     );
   }
@@ -169,9 +169,23 @@ class MealExploreBloc extends Bloc<MealExploreEvent, MealExploreState> {
         stateUpdateFavorite: RequestState.Error,
         message: l.message,
       )),
-      (r) => emit(state.copyWith(
-        stateUpdateFavorite: RequestState.Loaded,
-      ))
+      (r) {
+        final idx = state.meals.indexWhere((element) => element.id==event.idMeal);
+
+        if(idx!=-1) {
+          state.meals[idx] = Meal(
+            name: state.meals[idx].name,
+            id: state.meals[idx].id,
+            favorite: true,
+            thumbnail: state.meals[idx].thumbnail,
+            category: state.meals[idx].category,
+          );
+        }
+
+        emit(state.copyWith(
+          stateUpdateFavorite: RequestState.Loaded,
+        ));
+      }
     );
   }
 
@@ -189,9 +203,23 @@ class MealExploreBloc extends Bloc<MealExploreEvent, MealExploreState> {
         stateUpdateFavorite: RequestState.Error,
         message: l.message,
       )),
-      (r) => emit(state.copyWith(
-        stateUpdateFavorite: RequestState.Loaded,
-      ))
+      (r) {
+        final idx = state.meals.indexWhere((element) => element.id==event.idMeal);
+
+        if(idx!=-1) {
+          state.meals[idx] = Meal(
+            name: state.meals[idx].name,
+            id: state.meals[idx].id,
+            favorite: false,
+            thumbnail: state.meals[idx].thumbnail,
+            category: state.meals[idx].category,
+          );
+        }
+
+        emit(state.copyWith(
+          stateUpdateFavorite: RequestState.Loaded,
+        ));
+      }
     );
   }
 

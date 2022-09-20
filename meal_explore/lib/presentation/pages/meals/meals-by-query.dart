@@ -22,9 +22,7 @@ class _MealsByQueryPageState extends State<MealsByQueryPage> {
   void initState() {
     super.initState();
 
-    context.read<MealExploreBloc>().add(
-      MealExploreRequestMealsByQueryEvent(widget.query)
-    );
+    _fetchData();
   }
 
   @override
@@ -85,12 +83,19 @@ class _MealsByQueryPageState extends State<MealsByQueryPage> {
 
                   return MealList(
                     meals: state.meals,
+                    onAfterDetail: _fetchData,
                   );
               }
             },
           )
         ],
       ),
+    );
+  }
+
+  void _fetchData() {
+    context.read<MealExploreBloc>().add(
+        MealExploreRequestMealsByQueryEvent(widget.query)
     );
   }
 }

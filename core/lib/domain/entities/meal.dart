@@ -19,6 +19,6 @@ class Meal extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
+    id, favorite
   ];
 }
